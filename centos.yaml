@@ -7,11 +7,11 @@ parameters:
   image:
     type: string
     description: image used to create instance
-    default: cirros
+    default: centos7
   flavor:
     type: string
     description: instance flavor to be used
-    default: m1.tiny
+    default: m1.small
   key_name:
     type: string
     description: keypair to be used
@@ -33,6 +33,20 @@ resources:
       flavor: {get_param: flavor}
       key_name: {get_param: key_name}
       metadata: {get_param: metadata}
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+
+            yum -y install httpd php
+            systemctl enable httpd
+            systemctl start httpd
+            cat <<EOF > /var/www/html/index.php
+            <?php echo "Hello, My name is " . php_uname('n'); ?>
+            EOF
+          params:
+            someparam: value
       networks:
         - port: { get_resource: port }
 

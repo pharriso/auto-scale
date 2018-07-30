@@ -1,0 +1,3 @@
+resource_registry:
+
+    "OS::Nova::Server::Centos": /home/stack/auto-scale/centos.yaml
