@@ -1,0 +1,66 @@
+heat_template_version: 2016-10-14
+description: Template to spawn an cirros instance.
+
+parameters:
+  metadata:
+    type: json
+  image:
+    type: string
+    description: image used to create instance
+    default: cirros
+  flavor:
+    type: string
+    description: instance flavor to be used
+    default: m1.tiny
+  key_name:
+    type: string
+    description: keypair to be used
+    default: mykeypair
+  network:
+    type: string
+    description: project network to attach instance to
+    default: internal
+  external_network:
+    type: string
+    description: network used for floating IPs
+    default: external
+
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: image}
+      flavor: {get_param: flavor}
+      key_name: {get_param: key_name}
+      metadata: {get_param: metadata}
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+
+            yum -y install httpd php
+            systemctl enable httpd
+            systemctl start httpd
+            cat <<EOF > /var/www/html/hostname.php
+            <?php echo "Hello, My name is " . php_uname('n'); ?>
+            EOF
+      networks:
+        - port: { get_resource: port }
+
+  port:
+    type: OS::Neutron::Port
+    properties:
+      network: {get_param: network}
+      security_groups:
+        - default
+
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: {get_param: external_network}
+
+  floating_ip_assoc:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_resource: floating_ip }
+      port_id: { get_resource: port }

@@ -1,0 +1,3 @@
+resource_registry:
+
+    "OS::Nova::Server::Cirros": /home/stack/auto-scale/cirros.yaml
